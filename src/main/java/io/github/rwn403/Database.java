@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Database {
 
@@ -48,7 +50,7 @@ public class Database {
 
     /**
      * Set up the database according to the schema.
-     * @return True if the database was successfully set up, false otherwise.
+     * @return True if the database is successfully set up, false otherwise.
      */
     public boolean setup() {
         if (!isConnected) return false;
@@ -77,6 +79,58 @@ public class Database {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Execute an SQL query to retrieve matching results from the database.
+     * @param query The SQL query.
+     * @param args The arguments for the query.
+     * @return The table of query results.
+     */
+    public List<List<Object>> executeQuery(String query, Object... args) {
+        if (!isConnected) return null;
+        List<List<Object>> results = new ArrayList<>();
+        try (PreparedStatement ps = getConnection().prepareStatement(query);) {
+            for (int i = 0; i < args.length; i++)
+                ps.setObject(i + 1, args[i]);
+            try (ResultSet rs = ps.executeQuery();) {
+                int numColumns = rs.getMetaData().getColumnCount();
+                // Get the titles of the columns.
+                List<Object> l = new ArrayList<>();
+                for (int i = 0; i < numColumns; i++)
+                    l.add(rs.getMetaData().getColumnName(i + 1));
+                results.add(l);
+                // Get each row in the query results.
+                while (rs.next()) {
+                    l = new ArrayList<>();
+                    for (int i = 0; i < numColumns; i++)
+                        l.add(rs.getObject(i + 1));
+                    results.add(l);
+                }
+            }
+        } catch (SQLException e) {
+            handleSQLException(e);
+        }
+        return results;
+    }
+
+    /**
+     * Execute an SQL statement to update the database.
+     * @param statement The SQL statement.
+     * @param args The arguments for the statement.
+     * @return True if the statement is successfully executed, false otherwise.
+     */
+    public boolean executeUpdate(String statement, Object... args) {
+        if (!isConnected) return false;
+        try (PreparedStatement ps = getConnection().prepareStatement(statement);) {
+            for (int i = 0; i < args.length; i++)
+                ps.setObject(i + 1, args[i]);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            handleSQLException(e);
+            return false;
+        }
     }
 
     /**
