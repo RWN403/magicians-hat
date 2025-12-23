@@ -7,6 +7,11 @@ import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Handle interactions with a PostgreSQL database.
+ * @author RWN403
+ * @version 1.0
+ */
 public class Database {
 
     private static final String SCHEMA = "/DDL.sql"; 
