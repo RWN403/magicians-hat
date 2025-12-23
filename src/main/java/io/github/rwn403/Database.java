@@ -1,8 +1,13 @@
 package io.github.rwn403;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.*;
 
 public class Database {
+
+    private static final String SCHEMA = "/DDL.sql"; 
     
     // Store the user's login credentials.
     private String url = "";
@@ -17,6 +22,7 @@ public class Database {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
             Console.error("Failed to load the JDBC PostgreSQL driver.");
+            System.exit(0);
         }
         loggedin = false;
     }
@@ -36,6 +42,33 @@ public class Database {
             this.password = password;
             loggedin = true;
         } catch (SQLException e) {
+            Console.exception(e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean setUpDB() {
+        if (!isLoggedIn()) return false;
+        // Set up database schema.
+        try (Connection conn = DriverManager.getConnection(url, username, password);) {
+            Statement s = conn.createStatement();
+            // Read the SQL schema file.
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(getClass().getResourceAsStream(SCHEMA))
+            );
+            // Execute each DDL command.
+            String query = "";
+            String line;
+            while((line = br.readLine()) != null) {
+                query += line + " ";
+                if (line.trim().endsWith(";")) {
+                    s.execute(query);
+                    query = "";
+                }
+            }
+        } catch (SQLException | IOException e) {
+            Console.exception(e);
             return false;
         }
         return true;
