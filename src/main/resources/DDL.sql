@@ -1,3 +1,6 @@
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+
 CREATE TABLE ideas (
     idea_id SERIAL PRIMARY KEY,
     contents VARCHAR(10000) NOT NULL,
