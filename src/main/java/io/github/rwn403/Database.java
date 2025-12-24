@@ -10,7 +10,7 @@ import java.util.ArrayList;
 /**
  * Handle interactions with a PostgreSQL database.
  * @author RWN403
- * @version 1.0
+ * @version 1.0.1
  */
 public class Database {
 
@@ -24,6 +24,7 @@ public class Database {
     private boolean isConnected;
 
     public Database() {
+        Console.database("Intializing database...");
         // Load the JDBC PostgreSQL driver.
         try {
             Class.forName("org.postgresql.Driver");
@@ -35,6 +36,7 @@ public class Database {
         username = "";
         password = "";
         isConnected = false;
+        Console.database("Database initialized.");
     }
 
     /**
@@ -45,6 +47,7 @@ public class Database {
      * @return True if database is successfully connected, false otherwise.
      */
     public boolean connect(String url, String username, String password) {
+        Console.database("Connecting to database...");
         this.url = url;
         this.username = username;
         this.password = password;
@@ -59,9 +62,12 @@ public class Database {
      */
     public boolean setup() {
         if (!isConnected) return false;
+        Console.database("Setting up database...");
         // Set up database schema.
-        try (Connection conn = getConnection();) {
+        try (
+            Connection conn = getConnection();
             Statement s = conn.createStatement();
+        ) {
             // Read the SQL schema file.
             BufferedReader br = new BufferedReader(
                 new InputStreamReader(getClass().getResourceAsStream(SCHEMA))
@@ -80,9 +86,11 @@ public class Database {
             handleSQLException(e);
             return false;
         } catch (IOException e) {
+            Console.error("Failed to read schema file.");
             Console.exception(e);
             return false;
         }
+        Console.database("Database set up successfully.");
         return true;
     }
 
@@ -114,8 +122,10 @@ public class Database {
                 }
             }
         } catch (SQLException e) {
+            Console.error("Failed to execute query.");
             handleSQLException(e);
         }
+        Console.database("Query execution success.");
         return results;
     }
 
@@ -131,8 +141,10 @@ public class Database {
             for (int i = 0; i < args.length; i++)
                 ps.setObject(i + 1, args[i]);
             ps.executeUpdate();
+            Console.database("Statement execution success.");
             return true;
         } catch (SQLException e) {
+            Console.error("Failed to execute statement.");
             handleSQLException(e);
             return false;
         }
@@ -143,11 +155,10 @@ public class Database {
      * @return A connection to the database.
      */
     private Connection getConnection() {
-        if (!isConnected) return null;
         try {
             return DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
-            handleSQLException(e);
+            Console.error("Failed to retrieve database connection.");
             return null;
         }
     }
@@ -156,15 +167,17 @@ public class Database {
      * Update the connection status of the database.
      */
     private void validateConnection() {
-        isConnected = true;
+        Console.database("Validating database connection...");
         try (Connection conn = getConnection();) {
-            if (conn != null) isConnected = true;
-            Console.database("Database connection established successfully.");
+            if (conn != null) {
+                isConnected = true;
+                Console.database("Database connection established successfully.");
+            }
+            return;
         } catch (SQLException e) {
             Console.exception(e);
-            Console.database("Failed to establish database connection.");
-            isConnected = false;
         }
+        isConnected = false;
     }
 
     /**
