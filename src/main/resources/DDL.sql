@@ -4,8 +4,9 @@ CREATE SCHEMA public;
 CREATE TABLE ideas (
     idea_id SERIAL PRIMARY KEY,
     contents VARCHAR(10000) NOT NULL,
-    date_created DATE DEFAULT CURRENT_DATE,
-    last_modified DATE NOT NULL
+    date_created DATE NOT NULL DEFAULT CURRENT_DATE,
+    last_modified DATE NOT NULL DEFAULT CURRENT_DATE
+    CONSTRAINT valid_dates CHECK (last_modified >= date_created)
 );
 
 CREATE TABLE tags (
@@ -16,7 +17,10 @@ CREATE TABLE tags (
 CREATE TABLE drafts (
     draft_id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
-    contents VARCHAR(1000000) NOT NULL
+    contents VARCHAR(1000000) NOT NULL,
+    date_created DATE NOT NULL DEFAULT CURRENT_DATE,
+    last_modified DATE NOT NULL DEFAULT CURRENT_DATE
+    CONSTRAINT valid_dates CHECK (last_modified >= date_created)
 );
 
 CREATE TABLE ideas_tags (
